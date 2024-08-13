@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Comment System</title>
+  <style>
+    /* Basic styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .comment-section {
+      margin-bottom: 20px;
+    }
+    .comment {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .reply {
+      margin-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Comment System</h2>
+  <div id="login-form">
+    <label for="username">Username:</label>
+    <input type="text" id="username">
+    <label for="password">Password:</label>
+    <input type="password" id="password">
+    <button onclick="login()">Login</button>
+  </div>
+  <div id="comment-form" style="display: none;">
+    <textarea id="comment-text" placeholder="Write your comment"></textarea>
+    <input type="file" id="comment-image" accept="image/*">
+    <button onclick="submitComment()">Submit</button>
+  </div>
+  <div id="comment-list"></div>
+
+  <script>
+    const comments = [];
+    let currentUser = null;
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      // Replace this with your actual authentication logic
+      if (username && password) {
+        currentUser = username;
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('comment-form').style.display = 'block';
+      } else {
+        alert('Invalid credentials');
+      }
+    }
+
+    function submitComment() {
+      const commentText = document.getElementById('comment-text').value;
+      const commentImage = document.getElementById('comment-image').files[0];
+
+      if (!commentText) {
+        alert('Comment text is required');
+        return;
+      }
+
+      const comment = {
+        text: commentText,
+        image: commentImage ? URL.createObjectURL(commentImage) : null,
+        user: currentUser,
+        replies: [],
+        timestamp: new Date().toISOString()
+      };
+
+      comments.push(comment);
+      renderComments();
+      document.getElementById('comment-text').value = '';
+      document.getElementById('comment-image').value = '';
+    }
+
+    function renderComments() {
+      const commentList = document.getElementById('comment-list');
+      commentList.innerHTML = '';
+
+      comments.forEach(comment => {
+        const commentElement = document.createElement('div');
+        commentElement.classList.add('comment');
+
+        commentElement.innerHTML = `
+          <strong>${comment.user}</strong> - ${comment.timestamp}<br>
+          ${comment.text}<br>
+          ${comment.image ? `<img src="${comment.image}" alt="Comment Image">` : ''}
+          <div class="replies"></div>
+        `;
+
+        const repliesContainer = commentElement.querySelector('.replies');
+        comment.replies.forEach(reply => {
+          const replyElement = document.createElement('div');
+          replyElement.classList.add('reply');
+          replyElement.textContent = `${reply.user}: ${reply.text}`;
+          repliesContainer.appendChild(replyElement);
+        });
+
+        const replyInput = document.createElement('input');
+        replyInput.type = 'text';
+        replyInput.placeholder = 'Add a reply';
+        replyInput.addEventListener('keyup', event => {
+          if (event.key === 'Enter') {
+            const replyText = replyInput.value;
+            if (replyText) {
+              comment.replies.push({ user: currentUser, text: replyText });
+              renderComments();
+              replyInput.value = '';
+            }
+          }
+        });
+
+        commentElement.appendChild(replyInput);
+
+        commentList.appendChild(commentElement);
+      });
+    }
+  </script>
+</body>
+</html>
